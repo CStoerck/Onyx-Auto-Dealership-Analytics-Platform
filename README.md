@@ -137,8 +137,6 @@ DEALERSHIP_ANALYTICS.MARTS
 
 The Snowflake setup also separates tool permissions by responsibility. `AIRBYTE_ROLE` is used for ingestion into the raw landing schema. `DBT_ROLE` is used to read from the raw layer and build models in the analytics schemas.
 
-The warehouse is configured as an `XSMALL` warehouse with auto-suspend and auto-resume enabled, which is appropriate for a controlled portfolio project and development workload.
-
 ---
 
 ## dbt Transformation Layer
