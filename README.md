@@ -51,9 +51,6 @@ The reporting layer supports questions such as:
 - Which vehicle types contribute the most income?
 - How many vehicles are currently active in inventory?
 - How long are vehicles remaining unsold?
-- Which sales agents are driving monthly performance?
-- Which vendors are associated with the highest parts activity?
-- Which sellers are associated with higher downstream parts costs?
 
 The project is framed as an analytics engineering system because the main objective is not only to store data or build a dashboard. The objective is to design the full pipeline that turns dealership operational records into reliable reporting models.
 
@@ -66,24 +63,6 @@ The source system is a PHP dealership application backed by a MySQL transactiona
 The information flow design includes application forms and reporting flows for login, customer entry, vehicle search, vendor entry, vehicle detail review, adding vehicles to inventory, parts orders, sales transactions, monthly sales reporting, seller history reporting, price-per-condition reporting, parts statistics reporting, and average time in inventory reporting.
 
 The MySQL schema models dealership operations around users, employee roles, customers, vehicles, manufacturers, vehicle types, vendors, sales, vehicle colors, parts orders, and part line items. Vehicles are keyed by VIN. Sales are stored in a separate `Sale` table so unsold vehicles can remain in inventory without requiring null sale-related fields.
-
-### Core Source Tables
-
-- `User`
-- `AcquisitionSpecialist`
-- `SalesAgent`
-- `OperatingManager`
-- `Customer`
-- `Individual`
-- `Business`
-- `Vehicle`
-- `VehicleType`
-- `Manufacturer`
-- `Vendor`
-- `Sale`
-- `VehicleColor`
-- `PartsOrder`
-- `Part`
 
 ### Database Design Artifacts
 
