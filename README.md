@@ -13,7 +13,6 @@ This project was built to demonstrate how raw operational dealership data can be
 - **Data ingestion:** Airbyte
 - **Warehouse:** Snowflake
 - **Transformation framework:** dbt
-- **Modeling pattern:** Medallion-style architecture with staging, intermediate, and mart layers
 - **Reporting layer:** Power BI
 - **Orchestration:** Apache Airflow
 - **Runtime environment:** Docker and Docker Compose
@@ -26,7 +25,6 @@ This project was built to demonstrate how raw operational dealership data can be
 The Onyx Auto platform follows a source-to-dashboard analytics workflow. The PHP application captures dealership activity and writes records into MySQL. Airbyte syncs the MySQL source tables into Snowflake, where the raw data lands in a dedicated raw database and schema. dbt then transforms the raw data into clean analytical models. Power BI connects to the final mart models in Snowflake to provide the business-facing reporting layer. Airflow coordinates the workflow so ingestion, transformation, and reporting refresh tasks run in the correct order.
 
 ![Onyx Auto Architecture](docs/architecture/architecture_diagram.png)
-
 **Figure 1:** End-to-end Onyx Auto architecture showing dealership data moving from the PHP frontend and MySQL transactional database into Snowflake through Airbyte, transformed with dbt across raw, staging, intermediate, and mart layers, consumed by Power BI, and orchestrated through Airflow with Teams-based pipeline alerts.
 
 ### Data Flow
@@ -66,9 +64,17 @@ The MySQL schema models dealership operations around users, employee roles, cust
 
 ### Database Design Artifacts
 
-- Information flow diagram: `app/php-frontend/ifd_diagram.pdf`
-- Extended entity relationship diagram: `docs/database-design/eer_diagram.pdf`
-- Relational schema: `database/relational_schema.sql`
+## Information Flow Diagram
+![Information Flow Diagram](docs/database-design/information-flow-diagram.PNG)
+**Figure 2:** Information flow diagram showing how dealership users interact with the PHP application to create, update, and query operational data.
+
+## Extended Entity Relationship Diagram
+![Extended Entity Relationship Diagram](docs/database-design/extended-entity-relationship-diagram.PNG)
+**Figure 3:** Extended entity relationship diagram shows the logical structure of the database by mapping out entities, attributes, and relationships.
+
+## Relational schema
+![Relational Schema](docs/screenshots/relational-schema-preview.PNG)
+**Figure 4:** PReview of the relational schema that structures tables, and sets primary and foreign key relationships in the MySQL transactional database.
 
 ---
 
@@ -84,15 +90,8 @@ DEALERSHIP_RAW.MYSQL_LOAD
 
 This schema acts as the raw landing zone for MySQL data before dbt applies downstream transformations. The Airbyte connection uses an incremental append-and-deduplicate sync pattern. All streams use an `updated_at` field to identify changed records during syncs.
 
-### Airbyte Screenshots
-
-![Airbyte Snowflake Destination Settings](airbyte/airbyte_snowflake_settings.PNG)
-
-**Figure 2:** Airbyte Snowflake destination configuration showing the raw data landing location as `DEALERSHIP_RAW.MYSQL_LOAD`.
-
 ![Airbyte Schema Configuration](airbyte/airbyte_schema.PNG)
-
-**Figure 3:** Airbyte MySQL-to-Snowflake schema configuration showing enabled source streams synced with an incremental append-and-deduplicate pattern.
+**Figure 5:** Airbyte MySQL-to-Snowflake schema configuration showing enabled source streams synced with an incremental append-and-deduplicate pattern.
 
 ---
 
@@ -221,12 +220,10 @@ The mart YAML file documents the reporting models and includes dbt tests for uni
 ### dbt Lineage
 
 ![dbt Lineage](docs/screenshots/dbt-lineage.PNG)
-
-**Figure 4:** dbt lineage view showing how source tables flow through staging, intermediate, and mart models.
+**Figure 6:** dbt lineage view showing how source tables flow through staging, intermediate, and mart models.
 
 ![dbt Models](docs/screenshots/dbt-models.PNG)
-
-**Figure 5:** dbt model overview showing the project structure across transformation layers.
+**Figure 7:** dbt model overview showing the project structure across transformation layers.
 
 ---
 
@@ -239,40 +236,35 @@ Power BI serves as the final consumption layer for the Onyx Auto analytics platf
 The executive overview page summarizes dealership performance across net income, gross margin, gross sales income, vehicles sold, average profit per vehicle, and average days in inventory. Supporting visuals show monthly net income trends, net income by vehicle type, vehicle-level transaction details, and inventory aging.
 
 ![Power BI Executive Dashboard Overview](docs/screenshots/powerbi-executive-dashboard-overview.PNG)
-
-**Figure 6:** Executive overview dashboard showing dealership performance across net income, gross margin, gross sales income, vehicles sold, average profit per vehicle, and average days in inventory.
+**Figure 8:** Executive overview dashboard showing dealership performance across net income, gross margin, gross sales income, vehicles sold, average profit per vehicle, and average days in inventory.
 
 ### Monthly Sales Report
 
 The monthly sales page provides year-to-date sales performance and monthly drilldown analysis. Users can review net income, gross sales, vehicles sold, profit per vehicle, and sales-agent-level net income performance.
 
 ![Power BI Monthly Sales Report](docs/screenshots/powerbi-monthly-sales-report.PNG)
-
-**Figure 7:** Monthly sales report showing year-to-date net income, gross sales, vehicles sold, monthly sales drilldowns, and sales-agent-level net income performance.
+**Figure 9:** Monthly sales report showing year-to-date net income, gross sales, vehicles sold, monthly sales drilldowns, and sales-agent-level net income performance.
 
 ### Active Inventory Report
 
 The active inventory page focuses on unsold vehicle inventory and operational inventory health. It tracks vehicles currently in inventory, total inventory value, average days in inventory for unsold vehicles, percentage of unsold vehicles over 60 days, and inventory turnover rate.
 
 ![Power BI Inventory Report](docs/screenshots/powerbi-inventory-report.PNG)
-
-**Figure 8:** Active inventory report showing current inventory count, inventory value, average unsold days in inventory, percentage of unsold vehicles over 60 days, inventory turnover rate, and vehicle-level inventory details.
+**Figure 10:** Active inventory report showing current inventory count, inventory value, average unsold days in inventory, percentage of unsold vehicles over 60 days, inventory turnover rate, and vehicle-level inventory details.
 
 ### Part Statistics Report
 
 The part statistics page analyzes dealership parts activity across vendors, orders, supplied parts, vehicles serviced, total spend, and average part cost. This adds operational visibility into parts procurement and service-related costs.
 
 ![Power BI Part Statistics Report](docs/screenshots/powerbi-part-statistics-report.PNG)
-
-**Figure 9:** Part statistics report showing total parts orders, parts supplied, parts spend, vehicles serviced, average part cost, vendor-level part activity, and part-level detail drilldowns.
+**Figure 11:** Part statistics report showing total parts orders, parts supplied, parts spend, vehicles serviced, average part cost, vendor-level part activity, and part-level detail drilldowns.
 
 ### Seller History Report
 
 The seller history page identifies sellers associated with higher downstream parts costs and vehicle reconditioning activity. This page highlights high-risk sellers, high-risk purchased vehicles, parts installed per vehicle, and parts cost per high-risk vehicle.
 
 ![Power BI Seller History Report](docs/screenshots/powerbi-seller-history-report.PNG)
-
-**Figure 10:** Seller history report showing high-risk sellers, high-risk vehicles purchased, parts installed per high-risk vehicle, parts cost per high-risk vehicle, and seller-level risk indicators.
+**Figure 12:** Seller history report showing high-risk sellers, high-risk vehicles purchased, parts installed per high-risk vehicle, parts cost per high-risk vehicle, and seller-level risk indicators.
 
 ---
 
@@ -297,16 +289,13 @@ The DAG uses Airflow Variables to manage runtime configuration values such as Ai
 ### Airflow Screenshots
 
 ![Airflow DAG Graph](docs/screenshots/airflow-dag-graph.PNG)
-
-**Figure 11:** Airflow DAG graph showing the scheduled pipeline task sequence.
+**Figure 13:** Airflow DAG graph showing the scheduled pipeline task sequence.
 
 ![Airflow Status](docs/screenshots/airflow-status.PNG)
-
-**Figure 12:** Airflow status view showing pipeline execution monitoring.
+**Figure 14:** Airflow status view showing pipeline execution monitoring.
 
 ![Teams Failure Alerts](docs/screenshots/teams-pipeline-failure-alerts.PNG)
-
-**Figure 13:** Microsoft Teams failure alert generated from the Airflow pipeline failure callback.
+**Figure 15:** Microsoft Teams failure alert generated from the Airflow pipeline failure callback.
 
 ---
 
