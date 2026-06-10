@@ -1,5 +1,39 @@
 # Onyx Auto: End-to-End Used Car Dealership Analytics Engineering Platform
 
+## Live Power BI Dashboard
+[View the Onyx Auto Power BI Dashboard Here](https://app.powerbi.com/view?r=eyJrIjoiZTUyOThhMmQtZDA0ZS00MDg3LTkwOWEtMTJiMTBiZGIwYmNkIiwidCI6ImMxYTRiYTFiLTk5MDMtNDYxMC04YzU1LWQwYzQwOTJkNjU5OCJ9)
+
+
+## Table of Contents
+- [Live Power BI Dashboard](#live-power-bi-dashboard)
+- [Tech Stack](#tech-stack)
+- [Architecture Overview](#architecture-overview)
+- [Business Problem](#business-problem)
+- [Source Application and Transactional Database](#source-application-and-transactional-database)
+  - [Information Flow Diagram](#information-flow-diagram)
+  - [Extended Entity Relationship Diagram](#extended-entity-relationship-diagram)
+  - [Relational Schema](#relational-schema)
+- [Airbyte Ingestion Layer](#airbyte-ingestion-layer)
+- [Snowflake Warehouse Design](#snowflake-warehouse-design)
+- [dbt Transformation Layer](#dbt-transformation-layer)
+  - [dbt Project Configuration](#dbt-project-configuration)
+  - [Staging Layer](#staging-layer)
+  - [Intermediate Layer](#intermediate-layer)
+  - [Mart Layer](#mart-layer)
+  - [dbt Lineage](#dbt-lineage)
+- [Power BI Reporting Layer](#power-bi-reporting-layer)
+  - [Executive Dashboard Overview](#executive-dashboard-overview)
+  - [Monthly Sales Report](#monthly-sales-report)
+  - [Active Inventory Report](#active-inventory-report)
+  - [Part Statistics Report](#part-statistics-report)
+  - [Seller History Report](#seller-history-report)
+- [Airflow Orchestration](#airflow-orchestration)
+- [Setup Notes](#setup-notes)
+- [Security and Credential Handling](#security-and-credential-handling)
+- [Key Skills Demonstrated](#key-skills-demonstrated)
+- [Project Summary](#project-summary)
+- [Contact](#contact)
+
 Onyx Auto is an end-to-end analytics engineering project that simulates a used car dealership data platform. Operational records such as vehicle inventory updates, customer records, vendor records, parts orders, and sales transactions are entered through a PHP frontend and stored in a MySQL transactional database. Airbyte syncs the operational MySQL data into Snowflake, dbt transforms the warehouse data through staging, intermediate, and mart layers, Power BI consumes the final mart models for dealership reporting, and Airflow orchestrates the daily refresh workflow.
 
 This project was built to demonstrate how raw operational dealership data can be captured, ingested, transformed, modeled, orchestrated, and delivered as business-ready reporting through a modern analytics engineering stack.
@@ -229,6 +263,9 @@ Power BI serves as the final consumption layer for the Onyx Auto analytics platf
 
 The executive overview page summarizes dealership performance across net income, gross margin, gross sales income, vehicles sold, average profit per vehicle, and average days in inventory. Supporting visuals show monthly net income trends, net income by vehicle type, vehicle-level transaction details, and inventory aging.
 
+The published Power BI dashboard can be viewed here:
+[Open the Onyx Auto Power BI Dashboard](https://app.powerbi.com/view?r=eyJrIjoiZTUyOThhMmQtZDA0ZS00MDg3LTkwOWEtMTJiMTBiZGIwYmNkIiwidCI6ImMxYTRiYTFiLTk5MDMtNDYxMC04YzU1LWQwYzQwOTJkNjU5OCJ9)
+
 ![Power BI Executive Dashboard Overview](docs/screenshots/powerbi-executive-dashboard-overview.PNG)\
 **Figure 8:** Executive overview dashboard showing dealership performance across net income, gross margin, gross sales income, vehicles sold, average profit per vehicle, and average days in inventory.
 
@@ -290,57 +327,6 @@ The DAG uses Airflow Variables to manage runtime configuration values such as Ai
 
 ![Teams Failure Alerts](docs/screenshots/teams-pipeline-failure-alerts.PNG)\
 **Figure 15:** Microsoft Teams failure alert generated from the Airflow pipeline failure callback.
-
----
-
-## Repository Structure
-
-```text
-onyx-auto-analytics/
-├── airbyte/
-│   ├── airbyte_schema.PNG
-│   └── airbyte_snowflake_settings.PNG
-├── airflow/
-│   └── dags/
-│       └── onyx_auto_pipeline.py
-├── app/
-│   └── php-frontend/
-│       ├── add_part.php
-│       ├── add_vehicle.php
-│       ├── db.php
-│       ├── drilldown.php
-│       ├── header.php
-│       ├── index.php
-│       ├── login.php
-│       ├── logout.php
-│       ├── reports.php
-│       ├── search.php
-│       ├── sell_vehicle.php
-│       ├── update_part.php
-│       ├── vehicle_detail.php
-│       └── screenshots/
-├── database/
-│   ├── data.sql
-│   └── relational_schema.sql
-├── dbt/
-│   ├── screenshots/
-│   └── dealership_analytics.zip
-├── docs/
-│   ├── architecture/
-│   │   └── architecture_diagram.png
-│   ├── database-design/
-│   │   ├── eer_diagram.pdf
-│   │   └── relational_schema.sql
-│   └── screenshots/
-├── powerbi/
-│   ├── screenshots/
-│   ├── Onyx Auto Dealership Operations Dashboard.pbix
-│   └── powerbi-dashboard-web-link.txt
-├── snowflake/
-│   ├── screenshots/
-│   └── snowflake_setup.sql
-└── README.md
-```
 
 ---
 
@@ -418,3 +404,8 @@ This project demonstrates practical analytics engineering and data engineering s
 Onyx Auto demonstrates how a used car dealership can move from operational data capture to automated analytics reporting. The project begins with a PHP and MySQL transactional application, moves data into Snowflake through Airbyte, transforms it with dbt into reporting-ready marts, visualizes it in Power BI, and automates the workflow with Airflow running in Docker.
 
 The result is a complete analytics engineering portfolio project that shows how operational data can be modeled, governed, refreshed, and delivered for business reporting.
+
+## Contact
+Please feel free to contact me at:
+* **Email:** cstoerck@gmail.com
+* **LinkedIn:** https://www.linkedin.com/in/CodyStoerck/
