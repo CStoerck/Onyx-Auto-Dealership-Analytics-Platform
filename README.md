@@ -309,7 +309,7 @@ The DAG runs daily at 3:00 AM and coordinates the workflow from ingestion throug
 
 1. Trigger the Airbyte MySQL-to-Snowflake sync.
 2. Wait for the Airbyte sync to complete.
-3. Run the dbt transformation project from the Airflow environment.
+3. Run the dbt build from the Airflow environment.
 4. Refresh the Power BI semantic model.
 5. Send a Microsoft Teams alert if a pipeline task fails.
 
@@ -328,24 +328,6 @@ The DAG uses Airflow Variables to manage runtime configuration values such as Ai
 ![Teams Failure Alerts](docs/screenshots/teams-pipeline-failure-alerts.PNG)
 
 **Figure 13:** Microsoft Teams failure alert generated from the Airflow pipeline failure callback.
-
----
-
-## Dockerized Airflow Runtime
-
-Airflow is run locally through Docker Compose as a multi-container orchestration environment. The setup includes PostgreSQL for Airflow metadata, Redis for Celery task brokering, and separate Airflow services for the webserver, scheduler, worker, triggerer, initialization, and command-line access.
-
-The environment uses the CeleryExecutor, which allows scheduled pipeline tasks to be executed by Airflow worker containers. Local project folders for DAGs, logs, configuration, plugins, and dbt assets are mounted into the Airflow containers.
-
-The dbt project is mounted under:
-
-```text
-/opt/airflow/dbt
-```
-
-This allows the Airflow DAG to execute dbt commands as part of the scheduled pipeline.
-
-> **Development note:** This Docker Compose setup is intended for local development and portfolio demonstration. Production deployments would require hardened credentials, externalized secrets, and environment-specific infrastructure configuration.
 
 ---
 
