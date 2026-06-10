@@ -433,7 +433,6 @@ Recommended public repository practices:
 - Use `.env.example` files instead of committing real `.env` files.
 - Store Airflow runtime values in Airflow Variables or a secrets backend.
 - Keep Power BI and Snowflake secrets outside version control.
-- Review screenshots to ensure passwords, tokens, and private identifiers are hidden.
 
 ---
 
