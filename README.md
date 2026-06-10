@@ -5,6 +5,7 @@
 
 
 ## Table of Contents
+- [Overview](#overview)
 - [Tech Stack](#tech-stack)
 - [Architecture Overview](#architecture-overview)
 - [Business Problem](#business-problem)
@@ -32,6 +33,8 @@
 - [Key Skills Demonstrated](#key-skills-demonstrated)
 - [Project Summary](#project-summary)
 - [Contact](#contact)
+
+## Overview
 
 Onyx Auto is an end-to-end analytics engineering project that simulates a used car dealership data platform. Operational records such as vehicle inventory updates, customer records, vendor records, parts orders, and sales transactions are entered through a PHP frontend and stored in a MySQL transactional database. Airbyte syncs the operational MySQL data into Snowflake, dbt transforms the warehouse data through staging, intermediate, and mart layers, Power BI consumes the final mart models for dealership reporting, and Airflow orchestrates the daily refresh workflow.
 
