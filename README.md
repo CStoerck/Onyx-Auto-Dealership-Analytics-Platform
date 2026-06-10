@@ -103,7 +103,7 @@ The Snowflake destination lands raw source data in:
 DEALERSHIP_RAW.MYSQL_LOAD
 ```
 
-This schema acts as the raw landing zone for MySQL data before dbt applies downstream transformations. The Airbyte connection uses an incremental append-and-deduplicate sync pattern. Many streams use an `updated_at` field to identify changed records during syncs.
+This schema acts as the raw landing zone for MySQL data before dbt applies downstream transformations. The Airbyte connection uses an incremental append-and-deduplicate sync pattern. All streams use an `updated_at` field to identify changed records during syncs.
 
 ### Airbyte Screenshots
 
