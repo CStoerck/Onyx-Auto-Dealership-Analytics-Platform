@@ -48,9 +48,9 @@ Used car dealerships need visibility into inventory, sales, parts activity, sell
 The reporting layer supports questions such as:
 
 - How much net income and gross sales income has the dealership generated?
-- Which vehicle types contribute the most income?
-- How many vehicles are currently active in inventory?
 - How long are vehicles remaining unsold?
+- Which sales agents are driving monthly performance?
+- Which sellers are associated with higher parts costs?
 
 The project is framed as an analytics engineering system because the main objective is not only to store data or build a dashboard. The objective is to design the full pipeline that turns dealership operational records into reliable reporting models.
 
