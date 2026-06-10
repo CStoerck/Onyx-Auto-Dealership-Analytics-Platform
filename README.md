@@ -5,7 +5,6 @@
 
 
 ## Table of Contents
-- [Live Power BI Dashboard](#live-power-bi-dashboard)
 - [Tech Stack](#tech-stack)
 - [Architecture Overview](#architecture-overview)
 - [Business Problem](#business-problem)
