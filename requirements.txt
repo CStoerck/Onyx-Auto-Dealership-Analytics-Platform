@@ -1,0 +1,5 @@
+dbt-snowflake==1.8.3
+apache-airflow==2.9.3
+msal==1.30.0
+requests==2.32.3
+pytest==8.3.2
