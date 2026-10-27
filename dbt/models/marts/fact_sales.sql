@@ -1,0 +1,22 @@
+select 
+    vin, 
+    sale_date_key, 
+    buyer_customer_id, 
+    sales_agent_username, 
+    seller_customer_id, 
+    acquisition_specialist_username, 
+    vehicle_type, 
+    manufacturer, 
+    model_name, 
+    model_year, 
+    fuel_type, 
+    vehicle_condition, 
+    drivetrain, 
+    purchase_price, 
+    installed_parts_cost, 
+    total_parts_cost, 
+    gross_sales_income, 
+    net_income, 
+    days_in_inventory, 
+    gross_margin_pct 
+from {{ ref('int_sales_enriched') }}

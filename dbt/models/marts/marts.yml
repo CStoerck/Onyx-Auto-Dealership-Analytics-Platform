@@ -1,0 +1,88 @@
+version: 2 
+ 
+models: 
+  - name: dim_date 
+    description: Calendar date
+    columns: 
+      - name: date_key 
+        tests: [not_null, unique] 
+  - name: dim_vehicle 
+    description: One row per VIN.
+    columns: 
+      - name: vin 
+        tests: [not_null, unique] 
+  - name: dim_customer 
+    description: One row per customer, unified across individual and business customers.
+    columns:
+      - name: customer_id 
+        tests: [not_null, unique] 
+  - name: dim_employee 
+    description: One row per dealership user with employee role.
+    columns: 
+      - name: username 
+        tests: [not_null, unique] 
+  - name: dim_vendor 
+    description: One row per vendor. 
+    columns: 
+      - name: vendor_name 
+        tests: [not_null, unique] 
+  - name: fact_vehicle_lifecycle 
+    description: One row per VIN.
+    columns: 
+      - name: vin 
+        tests: [not_null, unique] 
+      - name: seller_customer_id 
+        tests: 
+          - relationships: 
+              to: ref('dim_customer') 
+              field: customer_id 
+  - name: fact_sales 
+    description: One row per sold VIN. 
+    columns: 
+      - name: vin 
+        tests: [not_null, unique] 
+      - name: buyer_customer_id 
+        tests: 
+          - relationships: 
+              to: ref('dim_customer') 
+              field: customer_id 
+  - name: fact_parts 
+    description: One row per VIN/order/part number part line. 
+    columns: 
+      - name: part_line_key 
+        tests: [not_null, unique] 
+      - name: vendor_name 
+        tests: 
+          - relationships: 
+              to: ref('dim_vendor') 
+              field: vendor_name 
+  - name: agg_monthly_sales 
+    description: Monthly sales summary. 
+    columns: 
+      - name: year_month 
+        tests: [not_null, unique] 
+  - name: agg_monthly_sales_agent 
+    description: Monthly sales agent drilldown. 
+    columns: 
+      - name: monthly_sales_agent_key 
+        tests: [not_null, unique] 
+  - name: agg_seller_history 
+    description: Seller quality and risk indicator.
+    columns: 
+      - name: seller_customer_id 
+        tests: [not_null, unique] 
+  - name: agg_price_per_condition 
+    description: Average purchase price by vehicle type and vehicle condition. 
+    columns: 
+      - name: price_per_condition_key 
+        tests: [not_null, unique] 
+  - name: agg_avg_time_inventory 
+    description: Average days in inventory by vehicle type.
+    columns: 
+      - name: vehicle_type 
+        tests: [not_null, unique] 
+  - name: agg_vendor_parts 
+    description: Vendor parts quantity and spend.
+    columns: 
+      - name: vendor_name 
+        tests: [not_null, unique]

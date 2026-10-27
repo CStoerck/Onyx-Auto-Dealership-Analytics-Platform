@@ -1,0 +1,47 @@
+version: 2 
+ 
+sources: 
+  - name: mysql_load 
+    database: DEALERSHIP_RAW 
+    schema: MYSQL_LOAD 
+    description: Airbyte-loaded MySQL operational tables.
+    tables: 
+      - name: customer 
+        identifier: CUSTOMER 
+        columns: 
+          - name: CUSTOMERID 
+            tests: [not_null, unique] 
+      - name: individual 
+        identifier: INDIVIDUAL 
+      - name: business 
+        identifier: BUSINESS 
+      - name: user 
+        identifier: USER 
+      - name: acquisition_specialist 
+        identifier: ACQUISITIONSPECIALIST 
+      - name: sales_agent 
+        identifier: SALESAGENT 
+      - name: operating_manager 
+        identifier: OPERATINGMANAGER 
+      - name: vehicle_type 
+        identifier: VEHICLETYPE 
+      - name: manufacturer 
+        identifier: MANUFACTURER 
+      - name: vendor 
+        identifier: VENDOR 
+      - name: vehicle 
+        identifier: VEHICLE 
+        columns: 
+          - name: VIN 
+            tests: [not_null, unique] 
+      - name: sale 
+        identifier: SALE 
+        columns: 
+          - name: VIN 
+            tests: [not_null, unique] 
+      - name: vehicle_color 
+        identifier: VEHICLECOLOR 
+      - name: parts_order 
+        identifier: PARTSORDER 
+      - name: part 
+        identifier: PART

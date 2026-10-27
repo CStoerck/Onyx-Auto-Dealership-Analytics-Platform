@@ -1,0 +1,283 @@
+version: 2
+
+models:
+  - name: stg_users
+    description: "Cleaned dealership application users. Password values should be excluded or masked in downstream marts."
+    columns:
+      - name: username
+        data_tests: [not_null, unique]
+      - name: password
+        data_tests: [not_null]
+      - name: first_name
+        data_tests: [not_null]
+      - name: last_name
+        data_tests: [not_null]
+
+  - name: stg_vehicle_types
+    columns:
+      - name: type_name
+        data_tests:
+          - not_null
+          - unique
+          - accepted_values:
+              arguments:
+                values: ['Minivan', 'Other', 'Truck', 'SUV', 'Sedan', 'Coupe', 'Convertible']
+
+  - name: stg_manufacturers
+    columns:
+      - name: mfg_name
+        data_tests: [not_null, unique]
+
+  - name: stg_customers
+    columns:
+      - name: customer_id
+        data_tests: [not_null, unique]
+      - name: phone
+        data_tests: [not_null]
+      - name: email
+      - name: street_address
+        data_tests: [not_null]
+      - name: city
+        data_tests: [not_null]
+      - name: state
+        data_tests: [not_null]
+      - name: postal_code
+        data_tests: [not_null]
+
+  - name: stg_vendors
+    columns:
+      - name: vendor_name
+        data_tests: [not_null, unique]
+      - name: phone
+        data_tests: [not_null]
+      - name: street_address
+        data_tests: [not_null]
+      - name: city
+        data_tests: [not_null]
+      - name: state
+        data_tests: [not_null]
+      - name: postal_code
+        data_tests: [not_null]
+
+  - name: stg_acquisition_specialists
+    columns:
+      - name: username
+        data_tests:
+          - not_null
+          - unique
+          - relationships:
+              arguments:
+                to: ref('stg_users')
+                field: username
+
+  - name: stg_sales_agents
+    columns:
+      - name: username
+        data_tests:
+          - not_null
+          - unique
+          - relationships:
+              arguments:
+                to: ref('stg_users')
+                field: username
+
+  - name: stg_operating_managers
+    columns:
+      - name: username
+        data_tests:
+          - not_null
+          - unique
+          - relationships:
+              arguments:
+                to: ref('stg_users')
+                field: username
+
+  - name: stg_individuals
+    columns:
+      - name: ssn
+        data_tests: [not_null, unique]
+      - name: first_name
+        data_tests: [not_null]
+      - name: last_name
+        data_tests: [not_null]
+      - name: customer_id
+        data_tests:
+          - not_null
+          - unique
+          - relationships:
+              arguments:
+                to: ref('stg_customers')
+                field: customer_id
+
+  - name: stg_businesses
+    columns:
+      - name: tax_id
+        data_tests: [not_null, unique]
+      - name: business_name
+        data_tests: [not_null]
+      - name: contact_first_name
+        data_tests: [not_null]
+      - name: contact_last_name
+        data_tests: [not_null]
+      - name: contact_title
+      - name: customer_id
+        data_tests:
+          - not_null
+          - unique
+          - relationships:
+              arguments:
+                to: ref('stg_customers')
+                field: customer_id
+
+  - name: stg_vehicles
+    columns:
+      - name: vin
+        data_tests: [not_null, unique]
+      - name: model_name
+        data_tests: [not_null]
+      - name: model_year
+        data_tests: [not_null]
+      - name: fuel_type
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['Gas', 'Diesel', 'Hybrid', 'Plugin Hybrid', 'Battery', 'Fuel Cell', 'Natural Gas']
+      - name: condition
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['Excellent', 'Very Good', 'Good', 'Fair', 'Rough']
+      - name: horsepower
+        data_tests: [not_null]
+      - name: drivetrain
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['FWD', 'RWD', 'AWD', '4WD']
+      - name: notes
+      - name: purch_price
+        data_tests: [not_null]
+      - name: purch_date
+        data_tests: [not_null]
+      - name: type_name
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_vehicle_types')
+                field: type_name
+      - name: mfg_name
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_manufacturers')
+                field: mfg_name
+      - name: purchaser_customer_id
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_customers')
+                field: customer_id
+      - name: acq_specialist_username
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_acquisition_specialists')
+                field: username
+
+  - name: stg_sales
+    columns:
+      - name: vin
+        data_tests:
+          - not_null
+          - unique
+          - relationships:
+              arguments:
+                to: ref('stg_vehicles')
+                field: vin
+      - name: buyer_customer_id
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_customers')
+                field: customer_id
+      - name: sales_agent_username
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_sales_agents')
+                field: username
+      - name: sale_date
+        data_tests: [not_null]
+
+  - name: stg_vehicle_colors
+    data_tests:
+      - unique_combination_of_columns:
+          arguments:
+            combination_of_columns: ['vin', 'color']
+    columns:
+      - name: vin
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_vehicles')
+                field: vin
+      - name: color
+        data_tests: [not_null]
+
+  - name: stg_parts_orders
+    data_tests:
+      - unique_combination_of_columns:
+          arguments:
+            combination_of_columns: ['vin', 'order_num', 'vendor_name']
+    columns:
+      - name: vin
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_vehicles')
+                field: vin
+      - name: order_num
+        data_tests: [not_null]
+      - name: vendor_name
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_vendors')
+                field: vendor_name
+
+  - name: stg_parts
+    data_tests:
+      - unique_combination_of_columns:
+          arguments:
+            combination_of_columns: ['vin', 'order_num', 'part_number']
+    columns:
+      - name: vin
+        data_tests: [not_null]
+      - name: order_num
+        data_tests: [not_null]
+      - name: part_number
+        data_tests: [not_null]
+      - name: description
+        data_tests: [not_null]
+      - name: unit_price
+        data_tests: [not_null]
+      - name: quantity
+        data_tests: [not_null]
+      - name: status
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['Ordered', 'Received', 'Installed']
