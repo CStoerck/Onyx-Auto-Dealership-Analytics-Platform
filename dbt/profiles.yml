@@ -1,0 +1,24 @@
+dealership_analytics:
+  target: prod
+  outputs:
+    ci:
+      type: snowflake
+      account: "{{ env_var('SNOWFLAKE_ACCOUNT', 'offline_ci_account') }}"
+      user: "{{ env_var('SNOWFLAKE_USER', 'offline_ci_user') }}"
+      password: "{{ env_var('SNOWFLAKE_PASSWORD', 'offline_ci_password') }}"
+      role: "{{ env_var('SNOWFLAKE_ROLE', 'DBT_ROLE') }}"
+      warehouse: "{{ env_var('SNOWFLAKE_WAREHOUSE', 'COMPUTE_WH') }}"
+      database: "{{ env_var('SNOWFLAKE_DATABASE', 'DEALERSHIP_ANALYTICS') }}"
+      schema: "CI_PR_{{ env_var('PR_NUMBER', 'TEST') }}"
+      threads: 4
+
+    prod:
+      type: snowflake
+      account: "{{ env_var('SNOWFLAKE_ACCOUNT', 'offline_prod_account') }}"
+      user: "{{ env_var('SNOWFLAKE_USER', 'offline_prod_user') }}"
+      password: "{{ env_var('SNOWFLAKE_PASSWORD', 'offline_prod_password') }}"
+      role: "{{ env_var('SNOWFLAKE_ROLE', 'DBT_ROLE') }}"
+      warehouse: "{{ env_var('SNOWFLAKE_WAREHOUSE', 'COMPUTE_WH') }}"
+      database: "{{ env_var('SNOWFLAKE_DATABASE', 'DEALERSHIP_ANALYTICS') }}"
+      schema: "PUBLIC"
+      threads: 4
