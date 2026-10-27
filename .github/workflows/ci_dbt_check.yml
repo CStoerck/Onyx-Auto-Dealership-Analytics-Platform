@@ -1,0 +1,41 @@
+name: "CI: dbt Project Check"
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  dbt_parse_check:
+    name: Validate dbt Models & Lineage (Offline)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 1. Copy Repository Code to Cloud Runner
+        uses: actions/checkout@v4
+
+      - name: 2. Set Up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: 3. Install dbt-snowflake
+        run: |
+          pip install --upgrade pip
+          pip install dbt-snowflake==1.8.3
+
+      - name: 4. Locate dbt Project & Validate All Models (dbt parse)
+        run: |
+          DBT_DIR=$(dirname "$(find . -name "dbt_project.yml" -not -path "*/dbt_packages/*" | head -n 1)")
+          echo "Found dbt project in folder: $DBT_DIR"
+          cd "$DBT_DIR"
+          if [ -f "packages.yml" ] || [ -f "dependencies.yml" ]; then
+            dbt deps --profiles-dir . --target prod
+          fi
+          dbt parse --profiles-dir . --target prod
+          echo "SUCCESS: All dbt staging, intermediate, and mart models parsed with zero errors!"
