@@ -1,4 +1,4 @@
-name: "CI: dbt Project Check"
+name: "CI/CD: Airflow Tests, dbt Slim CI & Live Docs"
 
 on:
   push:
@@ -9,32 +9,114 @@ on:
       - main
   workflow_dispatch:
 
-jobs:
-  dbt_parse_check:
-    name: Validate dbt Models & Lineage (Offline)
-    runs-on: ubuntu-latest
+permissions:
+  contents: read
+  pages: write
+  id-token: write
 
+env:
+  PR_NUMBER: ${{ github.event.pull_request.number || 'MAIN' }}
+  SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
+  SNOWFLAKE_USER: ${{ secrets.SNOWFLAKE_USER }}
+  SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
+  SNOWFLAKE_ROLE: ${{ secrets.SNOWFLAKE_ROLE }}
+  SNOWFLAKE_WAREHOUSE: ${{ secrets.SNOWFLAKE_WAREHOUSE }}
+  SNOWFLAKE_DATABASE: ${{ secrets.SNOWFLAKE_DATABASE }}
+
+jobs:
+  airflow_dag_validation:
+    name: 1. Airflow DAG Integrity (Pytest)
+    runs-on: ubuntu-latest
     steps:
-      - name: 1. Copy Repository Code to Cloud Runner
+      - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: 2. Set Up Python 3.11
+      - name: Set Up Python 3.11
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
-      - name: 3. Install dbt-snowflake
+      - name: Install Airflow & Pytest Dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run Pytest on onyx_auto_pipeline DAG
+        run: pytest tests/test_dag_integrity.py -v
+
+  dbt_slim_ci_and_state:
+    name: 2. dbt Slim CI & State Manifest
+    needs: airflow_dag_validation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set Up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dbt-snowflake
         run: |
           pip install --upgrade pip
           pip install dbt-snowflake==1.8.3
 
-      - name: 4. Locate dbt Project & Validate All Models (dbt parse)
+      - name: Download Production manifest.json for Slim CI Comparison
+        id: download_manifest
+        uses: dawidd6/action-download-artifact@v6
+        continue-on-error: true
+        with:
+          workflow: ci_dbt_check.yml
+          branch: main
+          name: dbt-prod-manifest
+          path: ./prod_state
+          if_no_artifact_found: warn
+
+      - name: Validate dbt Models, Run Slim CI Diff & Build Static Docs
         run: |
           DBT_DIR=$(dirname "$(find . -name "dbt_project.yml" -not -path "*/dbt_packages/*" | head -n 1)")
-          echo "Found dbt project in folder: $DBT_DIR"
-          cd "$DBT_DIR"
-          if [ -f "packages.yml" ] || [ -f "dependencies.yml" ]; then
-            dbt deps --profiles-dir . --target prod
+          PROFILES_DIR=$(dirname "$(find . -name "profiles.yml" -not -path "*/dbt_packages/*" | head -n 1)")
+          echo "DBT_DIR=$DBT_DIR" >> $GITHUB_ENV
+
+          if [ -f "$DBT_DIR/packages.yml" ] || [ -f "$DBT_DIR/dependencies.yml" ]; then
+            dbt deps --project-dir "$DBT_DIR" --profiles-dir "$PROFILES_DIR" --target prod
           fi
-          dbt parse --profiles-dir . --target prod
-          echo "SUCCESS: All dbt staging, intermediate, and mart models parsed with zero errors!"
+
+          dbt parse --project-dir "$DBT_DIR" --profiles-dir "$PROFILES_DIR" --target prod
+
+          if [ -f "./prod_state/manifest.json" ]; then
+            echo "=== Slim CI: Checking Modified Models & Downstream Dependencies (state:modified+) ==="
+            dbt ls --project-dir "$DBT_DIR" --profiles-dir "$PROFILES_DIR" --target ci --select state:modified+ --state ./prod_state
+          fi
+
+          dbt docs generate --project-dir "$DBT_DIR" --profiles-dir "$PROFILES_DIR" --target prod --no-compile --empty-catalog --static
+          mkdir -p ./public
+          cp "$DBT_DIR/target/static_index.html" ./public/index.html
+
+      - name: Upload Production manifest.json Artifact
+        if: github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@v4
+        with:
+          name: dbt-prod-manifest
+          path: ${{ env.DBT_DIR }}/target/manifest.json
+          retention-days: 90
+
+      - name: Upload Static dbt Docs for GitHub Pages
+        if: github.ref == 'refs/heads/main'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./public
+
+  deploy_dbt_docs:
+    name: 3. Publish Live dbt Docs (GitHub Pages)
+    needs: dbt_slim_ci_and_state
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
