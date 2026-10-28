@@ -1,8 +1,12 @@
 # Onyx Auto: End-to-End Used Car Dealership Analytics Engineering Platform
 
-## Live Power BI Dashboard
-[View the Onyx Auto Power BI Dashboard Here](https://app.powerbi.com/view?r=eyJrIjoiZTUyOThhMmQtZDA0ZS00MDg3LTkwOWEtMTJiMTBiZGIwYmNkIiwidCI6ImMxYTRiYTFiLTk5MDMtNDYxMC04YzU1LWQwYzQwOTJkNjU5OCJ9)
+[![CI/CD: Airflow Tests, dbt Slim CI & Live Docs](https://github.com/CStoerck/Onyx-Auto-Dealership-Analytics-Platform/actions/workflows/ci_dbt_check.yml/badge.svg)](https://github.com/CStoerck/Onyx-Auto-Dealership-Analytics-Platform/actions/workflows/ci_dbt_check.yml)
 
+## Live Project Links
+- **Live Power BI Dashboard:** [View the Onyx Auto Power BI Dashboard Here](https://app.powerbi.com/view?r=eyJrIjoiZTUyOThhMmQtZDA0ZS00MDg3LTkwOWEtMTJiMTBiZGIwYmNkIiwidCI6ImMxYTRiYTFiLTk5MDMtNDYxMC04YzU1LWQwYzQwOTJkNjU5OCJ9)
+- **Live dbt Documentation & Lineage Graph:** [Explore the Interactive dbt Docs Site Here](https://cstoerck.github.io/Onyx-Auto-Dealership-Analytics-Platform/)
+
+---
 
 ## Table of Contents
 - [Overview](#overview)
@@ -28,6 +32,7 @@
   - [Part Statistics Report](#part-statistics-report)
   - [Seller History Report](#seller-history-report)
 - [Airflow Orchestration](#airflow-orchestration)
+- [CI/CD and Data Governance](#cicd-and-data-governance)
 - [Setup Notes](#setup-notes)
 - [Security and Credential Handling](#security-and-credential-handling)
 - [Key Skills Demonstrated](#key-skills-demonstrated)
@@ -36,9 +41,9 @@
 
 ## Overview
 
-Onyx Auto is an end-to-end analytics engineering project that simulates a used car dealership data platform. Operational records such as vehicle inventory updates, customer records, vendor records, parts orders, and sales transactions are entered through a PHP frontend and stored in a MySQL transactional database. Airbyte syncs the operational MySQL data into Snowflake, dbt transforms the warehouse data through staging, intermediate, and mart layers, Power BI consumes the final mart models for dealership reporting, and Airflow orchestrates the daily refresh workflow.
+Onyx Auto is an end-to-end analytics engineering project that simulates a used car dealership data platform. Operational records such as vehicle inventory updates, customer records, vendor records, parts orders, and sales transactions are entered through a PHP frontend and stored in a MySQL transactional database. Airbyte syncs the operational MySQL data into Snowflake, dbt transforms the warehouse data through staging, intermediate, and mart layers, Power BI consumes the final mart models for dealership reporting, Airflow orchestrates the daily refresh workflow, and GitHub Actions governs code quality, Slim CI state comparison, and documentation deployment.
 
-This project was built to demonstrate how raw operational dealership data can be captured, ingested, transformed, modeled, orchestrated, and delivered as business-ready reporting through a modern analytics engineering stack.
+This project was built to demonstrate how raw operational dealership data can be captured, ingested, transformed, modeled, tested, orchestrated, and delivered as business-ready reporting through a modern analytics engineering stack.
 
 ---
 
@@ -48,9 +53,10 @@ This project was built to demonstrate how raw operational dealership data can be
 - **Transactional database:** MySQL
 - **Data ingestion:** Airbyte
 - **Warehouse:** Snowflake
-- **Transformation framework:** dbt
+- **Transformation framework:** dbt Core (`dbt-snowflake`)
 - **Reporting layer:** Power BI
-- **Orchestration:** Airflow
+- **Orchestration:** Apache Airflow
+- **CI/CD & Testing:** GitHub Actions, Pytest, dbt Slim CI (`state:modified+`), GitHub Pages
 - **Runtime environment:** Docker
 - **Alerting:** Microsoft Teams
 
@@ -72,6 +78,7 @@ The Onyx Auto platform follows a source-to-dashboard analytics workflow. The PHP
 5. Power BI connects to the final Snowflake mart models for reporting.
 6. Airflow runs the pipeline on a schedule and coordinates each dependency.
 7. Microsoft Teams receives failure alerts if a pipeline task fails.
+8. GitHub Actions validates DAG integrity, parses dbt models, runs Slim CI state comparisons on code changes, and publishes static dbt documentation to GitHub Pages.
 
 ---
 
@@ -102,7 +109,7 @@ The MySQL schema models dealership operations around users, employee roles, cust
 ![Extended Entity Relationship Diagram](docs/database-design/extended-entity-relationship-diagram.PNG)\
 **Figure 3:** Extended entity relationship diagram shows the logical structure of the database by mapping out entities, attributes, and relationships.
 
-### Relational schema
+### Relational Schema
 ![Relational Schema](docs/screenshots/relational-schema-preview.PNG)\
 **Figure 4:** Preview of the relational schema that structures tables, and sets primary and foreign key relationships in the MySQL transactional database.
 
@@ -249,6 +256,9 @@ The mart YAML file documents the reporting models and includes dbt tests for uni
 
 ### dbt Lineage
 
+Explore the live interactive dbt documentation and lineage graph here:
+[Open the Onyx Auto dbt Documentation Site](https://cstoerck.github.io/Onyx-Auto-Dealership-Analytics-Platform/)
+
 ![dbt Lineage](docs/screenshots/dbt-lineage.PNG)\
 **Figure 6:** dbt lineage view showing how source tables flow through staging, intermediate, and mart models.
 
@@ -313,11 +323,11 @@ The DAG runs daily at 3:00 AM and coordinates the workflow from ingestion throug
 
 1. Trigger the Airbyte MySQL-to-Snowflake sync.
 2. Wait for the Airbyte sync to complete.
-3. Run the dbt build from the Airflow environment.
+3. Run the dbt build (`--target prod`) from the Airflow environment.
 4. Refresh the Power BI semantic model.
 5. Send a Microsoft Teams alert if a pipeline task fails.
 
-The DAG uses Airflow Variables to manage runtime configuration values such as Airbyte credentials, Power BI API settings, and the Teams webhook URL. This keeps sensitive runtime values out of the DAG code.
+The DAG uses Airflow Variables with CI-safe fallback defaults to manage runtime configuration values such as Airbyte credentials, Power BI API settings, and the Teams webhook URL. This keeps sensitive runtime values out of the DAG code while allowing automated unit tests to validate the DAG offline.
 
 ### Airflow Screenshots
 
@@ -329,6 +339,21 @@ The DAG uses Airflow Variables to manage runtime configuration values such as Ai
 
 ![Teams Failure Alerts](docs/screenshots/teams-pipeline-failure-alerts.PNG)\
 **Figure 15:** Microsoft Teams failure alert generated from the Airflow pipeline failure callback.
+
+---
+
+## CI/CD and Data Governance
+
+To ensure SQL transformation updates and orchestration changes never break downstream Power BI reporting, the platform implements an automated 3-stage Continuous Integration and Continuous Deployment (CI/CD) pipeline via **GitHub Actions** (`.github/workflows/ci_dbt_check.yml`):
+
+1. **Stage 1 — Airflow Orchestration Integrity (`Pytest`):**
+   - Executes `tests/test_dag_integrity.py` in an isolated test runner with mocked `AIRFLOW_VAR_*` environment variables.
+   - Loads the Airflow `DagBag` to verify `onyx_auto_pipeline` parses with zero syntax or import errors, contains all required tasks, and preserves the exact linear task dependency chain from Airbyte ingestion to Power BI semantic model refresh.
+2. **Stage 2 — Environment-Aware Schema Routing & dbt Slim CI (`state:modified+`):**
+   - A custom `generate_schema_name` macro (`dbt/macros/generate_schema_name.sql`) dynamically routes production builds (`--target prod`) to `STAGING`, `INTERMEDIATE`, and `MARTS`, while isolating pull request builds (`--target ci`) into ephemeral `CI_PR_<PR_NUMBER>` schemas.
+   - Parses and validates the entire dbt dependency graph, Jinja macros, source definitions, and schema tests (`dbt parse`), then compares incoming changes against the production `manifest.json` state artifact using `dbt ls --select state:modified+ --state ./prod_state` to identify modified models and their downstream exposure dependencies.
+3. **Stage 3 — Continuous Deployment of Live dbt Documentation (`GitHub Pages`):**
+   - On merges to `main`, compiles a standalone static dbt documentation and lineage site (`dbt docs generate --static`), archives the latest production `manifest.json` artifact for future Slim CI runs, and deploys the interactive documentation portal to [GitHub Pages](https://cstoerck.github.io/Onyx-Auto-Dealership-Analytics-Platform/).
 
 ---
 
@@ -380,9 +405,9 @@ This project uses several tools that require credentials, including Snowflake, A
 Recommended public repository practices:
 
 - Replace real credentials with placeholders.
-- Use `.env.example` files instead of committing real `.env` files.
+- Parameterize `dbt/profiles.yml` with `env_var()` lookups and safe offline fallbacks.
 - Store Airflow runtime values in Airflow Variables or a secrets backend.
-- Keep Power BI and Snowflake secrets outside version control.
+- Keep Power BI and Snowflake secrets in GitHub Actions Secrets outside version control.
 
 ---
 
@@ -390,24 +415,25 @@ Recommended public repository practices:
 
 This project demonstrates practical analytics engineering and data engineering skills across the modern data stack:
 
-- Database design
-- Ingestion from source to warehouse with Airbyte
-- Snowflake warehouse organization with raw and analytics schemas
-- dbt layered modeling with staging, intermediate, and mart models
-- Dimensional modeling with facts, dimensions, and aggregates
-- Power BI dashboard design
-- Airflow orchestration with scheduled workflows
-- Microsoft Teams failure alerting
+- Relational database design and normalization
+- Incremental CDC ingestion from MySQL to Snowflake with Airbyte
+- Snowflake warehouse architecture with role-based access control (`AIRBYTE_ROLE`, `DBT_ROLE`) and separated raw/analytics schemas
+- dbt layered medallion modeling across staging, intermediate, and mart layers
+- Dimensional modeling with facts, dimensions, and business aggregates
+- Automated CI/CD pipelines with GitHub Actions, Pytest `DagBag` unit tests, and dbt Slim CI (`state:modified+`)
+- Automated static dbt documentation and lineage hosting via GitHub Pages
+- Power BI executive dashboard and semantic model design
+- Apache Airflow orchestration with scheduled workflows and Microsoft Teams failure alerting
 
 ---
 
 ## Project Summary
 
-Onyx Auto demonstrates how a used car dealership can move from operational data capture to automated analytics reporting. The project begins with a PHP and MySQL transactional application, moves data into Snowflake through Airbyte, transforms it with dbt into reporting-ready marts, visualizes it in Power BI, and automates the workflow with Airflow running in Docker.
+Onyx Auto demonstrates how a used car dealership can move from operational data capture to automated, governed analytics reporting. The project begins with a PHP and MySQL transactional application, moves data into Snowflake through Airbyte, transforms it with dbt into reporting-ready marts, validates orchestration and transformation changes through GitHub Actions CI/CD, visualizes performance in Power BI, and automates the daily workflow with Airflow running in Docker.
 
-The result is a complete analytics engineering portfolio project that shows how operational data can be modeled, governed, refreshed, and delivered for business reporting.
+The result is a complete analytics engineering portfolio platform that shows how operational data can be modeled, tested, governed, refreshed, and delivered for business reporting.
 
 ## Contact
 Please feel free to contact me at:
-* **Email:** cstoerck@gmail.com
-* **LinkedIn:** https://www.linkedin.com/in/CodyStoerck/
+- **Email:** cstoerck@gmail.com
+- **LinkedIn:** https://www.linkedin.com/in/CodyStoerck/
