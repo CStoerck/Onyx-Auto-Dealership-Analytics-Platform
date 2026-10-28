@@ -9,25 +9,26 @@ import time
 import msal
 
 
-# 1. Configuration Variables
+# 1. Configuration Variables (with CI-safe default_var fallbacks)
 
 AIRBYTE_BASE_URL = "http://host.docker.internal:8000/api/v1"
 AIRBYTE_CONNECTION_ID = "1d53fdc7-22e8-412b-a258-6945049e8bdd"
 
-AIRBYTE_USERNAME = Variable.get("AIRBYTE_USERNAME")
-AIRBYTE_PASSWORD = Variable.get("AIRBYTE_PASSWORD")
+AIRBYTE_USERNAME = Variable.get("AIRBYTE_USERNAME", default_var="airbyte_ci_placeholder")
+AIRBYTE_PASSWORD = Variable.get("AIRBYTE_PASSWORD", default_var="airbyte_ci_placeholder")
 
-DBT_PROJECT_DIR = "/opt/airflow/dbt/dealership_analytics"
-DBT_PROFILES_DIR = "/opt/airflow/dbt"
+DBT_PROJECT_DIR = Variable.get("DBT_PROJECT_DIR", default_var="/opt/airflow/dbt/dealership_analytics")
+DBT_PROFILES_DIR = Variable.get("DBT_PROFILES_DIR", default_var="/opt/airflow/dbt")
+DBT_TARGET = Variable.get("DBT_TARGET", default_var="prod")
 
-TEAMS_WEBHOOK_URL = Variable.get("TEAMS_WEBHOOK_URL")
+TEAMS_WEBHOOK_URL = Variable.get("TEAMS_WEBHOOK_URL", default_var="YOUR_TEAMS_WEBHOOK_URL")
 
-POWER_BI_TENANT_ID = Variable.get("POWER_BI_TENANT_ID")
-POWER_BI_CLIENT_ID = Variable.get("POWER_BI_CLIENT_ID")
-POWER_BI_CLIENT_SECRET = Variable.get("POWER_BI_CLIENT_SECRET")
+POWER_BI_TENANT_ID = Variable.get("POWER_BI_TENANT_ID", default_var="00000000-0000-0000-0000-000000000000")
+POWER_BI_CLIENT_ID = Variable.get("POWER_BI_CLIENT_ID", default_var="00000000-0000-0000-0000-000000000000")
+POWER_BI_CLIENT_SECRET = Variable.get("POWER_BI_CLIENT_SECRET", default_var="powerbi_ci_placeholder")
 
-POWER_BI_WORKSPACE_ID = Variable.get("POWER_BI_WORKSPACE_ID")
-POWER_BI_DATASET_ID = Variable.get("POWER_BI_DATASET_ID")
+POWER_BI_WORKSPACE_ID = Variable.get("POWER_BI_WORKSPACE_ID", default_var="00000000-0000-0000-0000-000000000000")
+POWER_BI_DATASET_ID = Variable.get("POWER_BI_DATASET_ID", default_var="00000000-0000-0000-0000-000000000000")
 
 
 # 2. Alerts
@@ -66,7 +67,7 @@ def send_failure_alert(context):
                     },
                     {
                         "name": "Environment",
-                        "value": "local/dev"
+                        "value": DBT_TARGET
                     },
                     {
                         "name": "Impact",
@@ -319,7 +320,7 @@ with DAG(
     dag_id='onyx_auto_pipeline',
     default_args=default_args,
     description='Runs the Onyx Auto ELT pipeline from Airbyte CDC to dbt transformations.',
-    schedule_interval='0 3 * * *',
+    schedule='0 3 * * *',
     start_date=datetime(2026, 5, 20),
     catchup=False,
     max_active_runs=1,
@@ -335,13 +336,11 @@ with DAG(
     trigger_sync = PythonOperator(
         task_id='trigger_airbyte_sync',
         python_callable=trigger_airbyte_sync,
-        provide_context=True
     )
 
     wait_for_sync = PythonOperator(
         task_id='wait_for_airbyte_sync',
         python_callable=wait_for_airbyte_sync,
-        provide_context=True
     )
 
     run_dbt_build = BashOperator(
@@ -350,6 +349,7 @@ with DAG(
         dbt build \
           --project-dir {DBT_PROJECT_DIR} \
           --profiles-dir {DBT_PROFILES_DIR} \
+          --target {DBT_TARGET} \
           --exclude stg_part+ stg_parts_order+ my_first_dbt_model my_second_dbt_model agg_price_per_condition
         """
     )
@@ -357,7 +357,6 @@ with DAG(
     refresh_semantic_model = PythonOperator(
         task_id='refresh_power_bi_semantic_model',
         python_callable=refresh_power_bi_semantic_model,
-        provide_context=True
     )
 
     end_pipeline = EmptyOperator(
