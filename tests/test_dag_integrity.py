@@ -33,7 +33,7 @@ def test_no_import_errors(dag_bag):
 def test_onyx_auto_pipeline_tasks_and_order(dag_bag):
     """Verify onyx_auto_pipeline tasks and linear dependency chain."""
     assert "onyx_auto_pipeline" in dag_bag.dags
-    dag = dag_bag.get_dag("onyx_auto_pipeline")
+    dag = dag_bag.dags["onyx_auto_pipeline"]
 
     assert "trigger_airbyte_sync" in dag.get_task("start_pipeline").downstream_task_ids
     assert "wait_for_airbyte_sync" in dag.get_task("trigger_airbyte_sync").downstream_task_ids
